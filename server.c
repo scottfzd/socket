@@ -46,4 +46,8 @@ int main() {
   int client_fd = accept(server_fd, (struct  sockaddr *)&client_addr, &client_len);
 
   printf("Client connected!\n");
+
+  while (1) {
+    
+  }
 }
