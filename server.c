@@ -38,16 +38,23 @@ int main() {
   listen(server_fd, 5);
 
 
-  // Accept a client connection
-
-  struct sockaddr_in client_addr;
-  socklen_t client_len = sizeof(client_addr);
-
-  int client_fd = accept(server_fd, (struct  sockaddr *)&client_addr, &client_len);
-
-  printf("Client connected!\n");
 
   while (1) {
-    
+    // Accept client connection
+    struct sockaddr_in client_addr;
+    socklen_t client_len = sizeof(client_addr);
+
+    int client_fd = accept(server_fd, (struct  sockaddr *)&client_addr, &client_len);
+
+    printf("Client connected!\n");
+
+    char buffer[1024];
+
+    ssize_t n = read(client_fd, buffer, sizeof(buffer) - 1);
+    if (n > 0) {
+        buffer[n] = '\0';
+        printf("Received from client: %s", buffer);
+    }
+
   }
 }
