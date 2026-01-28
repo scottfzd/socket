@@ -47,6 +47,7 @@ int main() {
 
   while (1) {
 
+    // Blocks until a fd is ready
     select(max_fd, &read_fds, NULL, NULL, NULL);
 
 
@@ -54,7 +55,7 @@ int main() {
     struct sockaddr_in client_addr;
     socklen_t client_len = sizeof(client_addr);
    
-      
+    // If server_fd is readable, accept new connection 
     if (FD_ISSET(server_fd, &read_fds)) {
       int client_fd = accept(server_fd, (struct  sockaddr *)&client_addr, &client_len);
       FD_SET(client_fd, &read_fds);
@@ -63,6 +64,7 @@ int main() {
 
     for (int i = 0; i < max_fd; i++) {
 
+      // If client_fd is readable, read from socket
       if (FD_ISSET(i, &read_fds)) {
 
         char buffer[1024];
