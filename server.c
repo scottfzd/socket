@@ -59,7 +59,10 @@ int main() {
     if (FD_ISSET(server_fd, &read_fds)) {
       int client_fd = accept(server_fd, (struct  sockaddr *)&client_addr, &client_len);
       FD_SET(client_fd, &read_fds);
-      max_fd = client_fd + 1;
+
+      if (client_fd > max_fd) { 
+        max_fd = client_fd + 1;
+      }
     }
 
     for (int i = 0; i < max_fd; i++) {
