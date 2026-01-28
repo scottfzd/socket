@@ -6,6 +6,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <sys/select.h>
+#include <arpa/inet.h>
 
 
 
@@ -38,22 +40,39 @@ int main() {
   listen(server_fd, 5);
 
 
+  fd_set read_fds;
+  FD_ZERO(&read_fds);
+  FD_SET(server_fd, &read_fds);
+  int max_fd = server_fd + 1;
 
   while (1) {
+
+    select(max_fd, &read_fds, NULL, NULL, NULL);
+
+
     // Accept client connection
     struct sockaddr_in client_addr;
     socklen_t client_len = sizeof(client_addr);
+   
+      
+    if (FD_ISSET(server_fd, &read_fds)) {
+      int client_fd = accept(server_fd, (struct  sockaddr *)&client_addr, &client_len);
+      FD_SET(client_fd, &read_fds);
+      max_fd = client_fd + 1;
+    }
 
-    int client_fd = accept(server_fd, (struct  sockaddr *)&client_addr, &client_len);
+    for (int i = 0; i < max_fd; i++) {
 
-    printf("Client connected!\n");
+      if (FD_ISSET(i, &read_fds)) {
 
-    char buffer[1024];
+        char buffer[1024];
 
-    ssize_t n = read(client_fd, buffer, sizeof(buffer) - 1);
-    if (n > 0) {
-        buffer[n] = '\0';
-        printf("Received from client: %s", buffer);
+        ssize_t n = read(i, buffer, sizeof(buffer) - 1);
+        if (n > 0) {
+            buffer[n] = '\0';
+            printf("Received from client: %s", buffer);
+        }
+      }
     }
 
   }
