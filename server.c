@@ -55,34 +55,39 @@ int main() {
 
     // Blocks until a fd is ready
     select(max_fd + 1, &read_fds, NULL, NULL, NULL);
-
-
-    // Accept client connection
-    struct sockaddr_in client_addr;
-    socklen_t client_len = sizeof(client_addr);
-   
-    // If server_fd is readable, accept new connection 
-    if (FD_ISSET(server_fd, &read_fds)) {
-      int client_fd = accept(server_fd, (struct  sockaddr *)&client_addr, &client_len);
-      FD_SET(client_fd, &all_fds);
-
-      if (client_fd > max_fd) { 
-        max_fd = client_fd;
-      }
-    }
-
+    
+    
+    // Iterate over all fds
     for (int i = 0; i <= max_fd; i++) {
 
-      // If client_fd is readable, read from socket
+      // Handle fd only if readable
       if (FD_ISSET(i, &read_fds)) {
 
-        char buffer[1024];
+        // If fd is server_fd, handle new connection
+        if (i == server_fd) {
 
-        ssize_t n = read(i, buffer, sizeof(buffer) - 1);
-        if (n > 0) {
-            buffer[n] = '\0';
-            printf("Received from client: %s", buffer);
+          // Accept client connection
+          struct sockaddr_in client_addr;
+          socklen_t client_len = sizeof(client_addr);
+
+          int client_fd = accept(server_fd, (struct  sockaddr *)&client_addr, &client_len);
+          FD_SET(client_fd, &all_fds);
+
+          if (client_fd > max_fd) { 
+            max_fd = client_fd;
+          }
+        } else {
+
+          // else (client fd) handle data
+          char buffer[1024];
+
+          ssize_t n = read(i, buffer, sizeof(buffer) - 1);
+          if (n > 0) {
+              buffer[n] = '\0';
+              printf("Received from client: %s", buffer);
+          }
         }
+
       }
     }
 
