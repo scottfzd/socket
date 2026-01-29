@@ -89,6 +89,11 @@ int main() {
               // EOF
               FD_CLR(i, &all_fds);
               close(i);
+          } else {
+            // error
+            perror("read");
+            FD_CLR(i, &all_fds);
+            close(i);
           }
         }
 
