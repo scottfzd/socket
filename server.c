@@ -42,13 +42,19 @@ int main() {
 
   fd_set read_fds;
   FD_ZERO(&read_fds);
-  FD_SET(server_fd, &read_fds);
-  int max_fd = server_fd + 1;
+
+  // permanent set
+  fd_set all_fds;
+  FD_ZERO(&all_fds);
+  FD_SET(server_fd, &all_fds);
+  int max_fd = server_fd;
 
   while (1) {
 
+    read_fds = all_fds;
+
     // Blocks until a fd is ready
-    select(max_fd, &read_fds, NULL, NULL, NULL);
+    select(max_fd + 1, &read_fds, NULL, NULL, NULL);
 
 
     // Accept client connection
@@ -58,14 +64,14 @@ int main() {
     // If server_fd is readable, accept new connection 
     if (FD_ISSET(server_fd, &read_fds)) {
       int client_fd = accept(server_fd, (struct  sockaddr *)&client_addr, &client_len);
-      FD_SET(client_fd, &read_fds);
+      FD_SET(client_fd, &all_fds);
 
       if (client_fd > max_fd) { 
-        max_fd = client_fd + 1;
+        max_fd = client_fd;
       }
     }
 
-    for (int i = 0; i < max_fd; i++) {
+    for (int i = 0; i <= max_fd; i++) {
 
       // If client_fd is readable, read from socket
       if (FD_ISSET(i, &read_fds)) {
