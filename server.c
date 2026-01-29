@@ -85,6 +85,10 @@ int main() {
           if (n > 0) {
               buffer[n] = '\0';
               printf("Received from client: %s", buffer);
+          } else if (n == 0) {
+              // EOF
+              FD_CLR(i, &all_fds);
+              close(i);
           }
         }
 
