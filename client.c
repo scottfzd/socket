@@ -79,13 +79,14 @@ int main() {
           len += n_bytes;
         }
 
-        output[len] = '\0';
         _pclose(fp);
 
-        printf("OUTPUT: %s", output);
+        size_t sent = 0;
+        while (sent < len) {
+          int n = send(sock, output + sent , len - sent, 0);
 
-        send(sock, output, strlen(output), 0);
-
+          sent += n;
+        }
       }
 
     } else {
