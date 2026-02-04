@@ -72,7 +72,12 @@ int main() {
         FILE *fp = _popen(cmd, "r");
 
         char output[4096];
-        size_t len = fread(output, 1, sizeof(output)-1, fp);
+
+        size_t len = 0;
+        int n_bytes;
+        while ((n_bytes = fread(output + len, 1, sizeof(output) - 1 - len, fp)) > 0) {
+          len += n_bytes;
+        }
 
         output[len] = '\0';
         _pclose(fp);
