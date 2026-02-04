@@ -45,20 +45,12 @@ int main() {
     char *newline;
 
     // Processes one command per loop iteration
-    while (1) {
+    while ((newline = memchr(recv_buffer, '\n', recv_len)) == NULL) {
       // Receive bytes from socket and append them to recv_buffer
       int n = recv(sock, recv_buffer + recv_len, sizeof(recv_buffer) - 1 - recv_len, 0);
 
       if (n > 0) {
-        recv_len += n;
-        
-        // Check for delimiter `\n` to frame messages
-        newline = memchr(recv_buffer, '\n', recv_len);
-
-        if (newline) {
-          break;
-        }
-        
+          recv_len += n;
       }
     }
 
