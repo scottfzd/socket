@@ -6,17 +6,13 @@
 #include <string.h>
 
 
-int main() {
-  WSADATA wsa;
-  WSAStartup(MAKEWORD(2,2), &wsa);
-
+SOCKET connect_to_server() {
 
   SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
 
   if (sock == INVALID_SOCKET) {
     printf("Could not create socket. Error: %d\n", WSAGetLastError());
-    WSACleanup();
-    return 1;
+    return INVALID_SOCKET;
   }
 
   // Server address to connect to
@@ -32,9 +28,18 @@ int main() {
     
     printf("Unable to connect: %d\n", WSAGetLastError());
     closesocket(sock);
-    WSACleanup();
-    return 1;
+    return INVALID_SOCKET;
   }
+
+  return sock;
+}
+
+int main() {
+
+  WSADATA wsa;
+  WSAStartup(MAKEWORD(2,2), &wsa);
+
+  SOCKET sock = connect_to_server();
 
 
   char recv_buffer[1024];
