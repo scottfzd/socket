@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #define INITIAL_BACKOFF 1
 
@@ -42,6 +43,7 @@ int main() {
   WSADATA wsa;
   WSAStartup(MAKEWORD(2,2), &wsa);
 
+  srand((unsigned int)time(NULL));
   int delay = INITIAL_BACKOFF;
   const int MAX_BACKOFF = 30;
   while (1) {
@@ -51,7 +53,8 @@ int main() {
 
     if (sock == INVALID_SOCKET) {
       
-      Sleep(delay * 1000);
+      int sleep_time = 1 + rand() % delay;
+      Sleep(sleep_time * 1000);
       delay *= 2;
 
       if (delay > MAX_BACKOFF) {
