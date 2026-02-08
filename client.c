@@ -5,37 +5,36 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define INITIAL_BACKOFF 1
+
 
 SOCKET connect_to_server() {
 
-  while (1) {
-    SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
+  SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
 
-    if (sock == INVALID_SOCKET) {
-      printf("Could not create socket. Error: %d\n", WSAGetLastError());
-      Sleep(5000);
-      continue;
-    }
-
-    // Server address to connect to
-    struct sockaddr_in server_addr;
-    memset(&server_addr, 0, sizeof(server_addr));
-
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(8080);
-    inet_pton(AF_INET, "192.168.209.1", &server_addr.sin_addr);
-
-    // Connect to remote service
-    if (connect(sock, &server_addr, sizeof(server_addr)) == SOCKET_ERROR) {
-      
-      printf("Unable to connect: %d\n", WSAGetLastError());
-      closesocket(sock);
-      Sleep(5000);
-      continue;
-    }
-
-    return sock;
+  if (sock == INVALID_SOCKET) {
+    printf("Could not create socket. Error: %d\n", WSAGetLastError());
+    return INVALID_SOCKET;
   }
+
+  // Server address to connect to
+  struct sockaddr_in server_addr;
+  memset(&server_addr, 0, sizeof(server_addr));
+
+  server_addr.sin_family = AF_INET;
+  server_addr.sin_port = htons(8080);
+  inet_pton(AF_INET, "192.168.209.1", &server_addr.sin_addr);
+
+  // Connect to remote service
+  if (connect(sock, &server_addr, sizeof(server_addr)) == SOCKET_ERROR) {
+      
+    printf("Unable to connect: %d\n", WSAGetLastError());
+    closesocket(sock);
+    return INVALID_SOCKET;
+  }
+
+  return sock;
+  
 }
 
 int main() {
@@ -43,10 +42,27 @@ int main() {
   WSADATA wsa;
   WSAStartup(MAKEWORD(2,2), &wsa);
 
-
+  int delay = INITIAL_BACKOFF;
+  const int MAX_BACKOFF = 30;
   while (1) {
 
     SOCKET sock = connect_to_server();
+
+
+    if (sock == INVALID_SOCKET) {
+      
+      Sleep(delay * 1000);
+      delay *= 2;
+
+      if (delay > MAX_BACKOFF) {
+        delay = MAX_BACKOFF;
+      }
+
+      continue;
+
+    }
+
+    delay = INITIAL_BACKOFF;
     int connection_alive = 1;
 
     char recv_buffer[1024];
