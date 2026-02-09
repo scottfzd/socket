@@ -2,3 +2,6 @@ server
 client.exe
 agent.exe
 agent2.exe
+installer.wixpdb
+cab1.cab
+installer.msi
