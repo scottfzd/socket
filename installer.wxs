@@ -22,12 +22,22 @@
       <Component Id="AgentExeComponent" Guid="42107123-84e3-451e-b386-3c3f7ee3e7fe">
         <File Source="agent.exe" KeyPath="yes"/>
       </Component>
+
+      <Component Id="AgentRunKeyComponent" Guid="ffb3590c-6a9b-4d81-9cc4-530d41e0a699">
+        <RegistryValue Root="HKCU"
+                       Key="Software\Microsoft\Windows\CurrentVersion\Run"
+                       Name="MyAgent"
+                       Value="[INSTALLFOLDER]agent.exe"
+                       Type="string"
+                       KeyPath="yes"/>
+      </Component>
     </DirectoryRef>
   </Fragment>
 
   <Fragment>
     <ComponentGroup Id="ProductComponents">
       <ComponentRef Id="AgentExeComponent"/>
+      <ComponentRef Id="AgentRunKeyComponent"/>
     </ComponentGroup>
   </Fragment>
 
