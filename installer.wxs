@@ -15,12 +15,16 @@
       <ComponentGroupRef Id="ProductComponents"/>
     </Feature>
 
+    <InstallExecuteSequence>
+      <Custom Action="LaunchAgent" After="InstallFinalize"/>
+    </InstallExecuteSequence>
+
   </Package>
 
   <Fragment>
     <DirectoryRef Id="INSTALLFOLDER">
       <Component Id="AgentExeComponent" Guid="42107123-84e3-451e-b386-3c3f7ee3e7fe">
-        <File Source="agent.exe" KeyPath="yes"/>
+        <File Id="AgentExeFile" Source="agent.exe" KeyPath="yes"/>
       </Component>
 
       <Component Id="AgentRunKeyComponent" Guid="ffb3590c-6a9b-4d81-9cc4-530d41e0a699">
@@ -32,6 +36,15 @@
                        KeyPath="yes"/>
       </Component>
     </DirectoryRef>
+  </Fragment>
+
+  <Fragment>
+    <CustomAction Id="LaunchAgent"
+                  FileRef="AgentExeFile"
+                  ExeCommand=""
+                  Execute="immediate"
+                  Return="asyncNoWait"
+                  Impersonate="yes"/>
   </Fragment>
 
   <Fragment>
