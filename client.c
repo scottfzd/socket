@@ -78,14 +78,14 @@ int process_buffered_data(size_t *recv_len, char *recv_buffer, SOCKET sock) {
     // Append `\0` to make it a string
     cmd[cmd_len] = '\0';
 
-    // Move remaining bytes back to the start of recv_buffer
-    memmove(recv_buffer, recv_buffer + cmd_len + 1, *recv_len - (cmd_len + 1));
-    *recv_len = *recv_len - (cmd_len + 1);
-          
-    // Process received command
+    // Process command
     if (process_cmd(cmd, sock) < 0) {
       return -1;
     }
+
+    // Move remaining bytes back to the start of recv_buffer
+    memmove(recv_buffer, recv_buffer + cmd_len + 1, *recv_len - (cmd_len + 1));
+    *recv_len = *recv_len - (cmd_len + 1);
 
   }
 
