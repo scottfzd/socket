@@ -40,7 +40,7 @@ SOCKET connect_to_server() {
 
 int process_incoming_byte_stream(SOCKET sock, char *recv_buffer, size_t *recv_len) {
 
-  int n = recv(sock, recv_buffer + *recv_len, sizeof(recv_buffer) - 1 - *recv_len, 0);
+  int n = recv(sock, recv_buffer + *recv_len, sizeof(recv_buffer) - *recv_len, 0);
 
   if (n > 0) {
 
