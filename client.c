@@ -38,9 +38,10 @@ SOCKET connect_to_server() {
   
 }
 
-int process_buffered_data(int *recv_len, char *recv_buffer, char *cmd, SOCKET sock) {
+int process_buffered_data(int *recv_len, char *recv_buffer, SOCKET sock) {
 
   char *newline;
+  char cmd[1024];
   while ((newline = memchr(recv_buffer, '\n', *recv_len)) != NULL) {
     int cmd_len = newline - recv_buffer;
 
@@ -53,7 +54,7 @@ int process_buffered_data(int *recv_len, char *recv_buffer, char *cmd, SOCKET so
     memmove(recv_buffer, recv_buffer + cmd_len + 1, *recv_len - (cmd_len + 1));
     *recv_len = *recv_len - (cmd_len + 1);
           
-    // Perform received command
+    // Process received command
     if (process_cmd(cmd, sock) < 0) {
       return -1;
     }
@@ -123,7 +124,6 @@ int main() {
 
     char recv_buffer[1024];
     int recv_len = 0;
-    char cmd[1024];
     while (connection_alive) {
 
       int n = recv(sock, recv_buffer + recv_len, sizeof(recv_buffer) - 1 - recv_len, 0);
@@ -131,7 +131,7 @@ int main() {
       if (n > 0) {
 
         recv_len += n;
-        if (process_buffered_data(&recv_len, recv_buffer, cmd, sock) < 0) {
+        if (process_buffered_data(&recv_len, recv_buffer, sock) < 0) {
           closesocket(sock);
           connection_alive = 0;
         }
