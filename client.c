@@ -27,7 +27,7 @@ SOCKET connect_to_server() {
   inet_pton(AF_INET, "192.168.209.1", &server_addr.sin_addr);
 
   // Connect to remote service
-  if (connect(sock, &server_addr, sizeof(server_addr)) == SOCKET_ERROR) {
+  if (connect(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) == SOCKET_ERROR) {
       
     printf("Unable to connect: %d\n", WSAGetLastError());
     closesocket(sock);
