@@ -47,6 +47,7 @@ int main() {
   fd_set all_fds;
   FD_ZERO(&all_fds);
   FD_SET(server_fd, &all_fds);
+  FD_SET(STDIN_FILENO, &all_fds);
   int max_fd = server_fd;
 
   while (1) {
@@ -76,6 +77,30 @@ int main() {
           if (client_fd > max_fd) { 
             max_fd = client_fd;
           }
+
+        } else if (i == STDIN_FILENO) {
+
+          // else if STDIN handle terminal input
+          char input[1024];
+
+          ssize_t n = read(i, input, sizeof(input) - 1);
+
+          if (n > 0) {
+
+            size_t sent = 0;
+            while (sent < n) {
+              
+              ssize_t n_bytes = send(, input + sent, n - sent, 0);
+
+              if (n_bytes > 0) {
+                sent += n_bytes;
+              }
+
+            }
+
+          }
+
+
         } else {
 
           // else (client fd) handle data
