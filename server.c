@@ -9,6 +9,13 @@
 #include <sys/select.h>
 #include <arpa/inet.h>
 
+typedef struct {
+  int id;
+  int fd;
+  // IP
+  // buffer
+  // state
+} client_t;
 
 
 int main() {
@@ -50,6 +57,11 @@ int main() {
   FD_SET(STDIN_FILENO, &all_fds);
   int max_fd = server_fd;
 
+  client_t clients[FD_SETSIZE];
+  memset(clients, 0, sizeof(clients));
+
+  int next_client_id = 1;
+
   while (1) {
 
     read_fds = all_fds;
@@ -77,6 +89,14 @@ int main() {
           if (client_fd > max_fd) { 
             max_fd = client_fd;
           }
+
+          client_t client;
+          client.id = next_client_id;
+          client.fd = client_fd;
+
+          clients[client_fd] = client;
+
+          next_client_id ++;
 
         } else if (i == STDIN_FILENO) {
 
@@ -113,11 +133,13 @@ int main() {
           } else if (n == 0) {
               // EOF
               FD_CLR(i, &all_fds);
+              memset(&clients[i], 0, sizeof(client_t));
               close(i);
           } else {
             // error
             perror("read");
             FD_CLR(i, &all_fds);
+            memset(&clients[i], 0, sizeof(client_t));
             close(i);
           }
         }
