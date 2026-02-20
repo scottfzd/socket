@@ -41,7 +41,9 @@ int main() {
 
 
   // Bind socket to the address
-  bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr));
+  if (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+    perror("bind");
+  }
 
   // Listen for incoming connections
   listen(server_fd, 5);
@@ -98,6 +100,8 @@ int main() {
 
           next_client_id ++;
 
+          printf("%i\n", client.fd);
+
         } else if (i == STDIN_FILENO) {
 
           // else if STDIN handle terminal input
@@ -107,15 +111,34 @@ int main() {
 
           if (n > 0) {
 
-            size_t sent = 0;
-            while (sent < n) {
-              
-              ssize_t n_bytes = send(, input + sent, n - sent, 0);
+            input[n] = '\0';
+            char *cmd = strtok(input, " ");
+            char *id_str  = strtok(NULL, " ");
+            char *msg = strtok(NULL, "");
 
-              if (n_bytes > 0) {
-                sent += n_bytes;
+            int id = atoi(id_str);
+
+            int client_fd;
+            for (int j = 0; j < sizeof(clients)/sizeof(client_t); j++) {
+              if (clients[j].fd != 0 && clients[j].id == id) {
+                client_fd = clients[j].fd;
+                break;
               }
+            }
 
+            if (strcmp(cmd, "send") == 0) {
+
+              size_t sent = 0;
+              size_t msg_len = strlen(msg);
+              while (sent < msg_len) {
+                
+                ssize_t n_bytes = send(client_fd, msg + sent, msg_len - sent, 0);
+
+                if (n_bytes > 0) {
+                  sent += n_bytes;
+                }
+
+              }
             }
 
           }
