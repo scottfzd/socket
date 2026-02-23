@@ -40,7 +40,7 @@ void handle_incoming_connection(int server_fd, fd_set *all_fds, int *max_fd, cli
 
   (*next_client_id) ++;
 
-  printf("%i\n", client.fd);
+  printf("%i\n", client.id);
   printf("%s\n", client.ip);
 
 }
@@ -56,13 +56,13 @@ void handle_client_data(int client_fd, client_t *clients, fd_set *all_fds) {
       printf("Received from client %s: %s", client_ip, buffer);
   } else if (n == 0) {
       // EOF
-      FD_CLR(client_fd, *all_fds);
+      FD_CLR(client_fd, all_fds);
       memset(&clients[client_fd], 0, sizeof(client_t));
       close(client_fd);
   } else {
     // error
     perror("read");
-    FD_CLR(client_fd, *all_fds);
+    FD_CLR(client_fd, all_fds);
     memset(&clients[client_fd], 0, sizeof(client_t));
     close(client_fd);
   }
@@ -140,11 +140,8 @@ int main() {
           // else if STDIN handle terminal input
           char input[1024];
 
-          ssize_t n = read(i, input, sizeof(input) - 1);
+          if (fgets(input, sizeof(input), stdin) != NULL) {
 
-          if (n > 0) {
-
-            input[n] = '\0';
             char *cmd = strtok(input, " ");
             char *id_str  = strtok(NULL, " ");
             char *msg = strtok(NULL, "");
@@ -181,7 +178,7 @@ int main() {
 
 
           handle_client_data(i, clients, &all_fds);
-          
+
         }
 
       }
