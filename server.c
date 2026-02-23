@@ -17,6 +17,34 @@ typedef struct {
   // state
 } client_t;
 
+void handle_incoming_connection(int server_fd, fd_set *all_fds, int *max_fd, client_t* clients, int *next_client_id) {
+
+  // Accept client connection
+  struct sockaddr_in client_addr;
+  socklen_t client_len = sizeof(client_addr);
+
+  int client_fd = accept(server_fd, (struct  sockaddr *)&client_addr, &client_len);
+  FD_SET(client_fd, all_fds);
+
+  if (client_fd > *max_fd) { 
+    *max_fd = client_fd;
+  }
+
+  client_t client;
+  client.id = *next_client_id;
+  client.fd = client_fd;
+  inet_ntop(AF_INET, &client_addr.sin_addr, client.ip, INET_ADDRSTRLEN);
+
+
+  clients[client_fd] = client;
+
+  (*next_client_id) ++;
+
+  printf("%i\n", client.fd);
+  printf("%s\n", client.ip);
+
+}
+
 
 int main() {
 
@@ -81,29 +109,8 @@ int main() {
         // If fd is server_fd, handle new connection
         if (i == server_fd) {
 
-          // Accept client connection
-          struct sockaddr_in client_addr;
-          socklen_t client_len = sizeof(client_addr);
-
-          int client_fd = accept(server_fd, (struct  sockaddr *)&client_addr, &client_len);
-          FD_SET(client_fd, &all_fds);
-
-          if (client_fd > max_fd) { 
-            max_fd = client_fd;
-          }
-
-          client_t client;
-          client.id = next_client_id;
-          client.fd = client_fd;
-          inet_ntop(AF_INET, &client_addr.sin_addr, client.ip, INET_ADDRSTRLEN);
-
-
-          clients[client_fd] = client;
-
-          next_client_id ++;
-
-          printf("%i\n", client.fd);
-          printf("%s\n", client.ip);
+          
+          handle_incoming_connection(server_fd, &all_fds, &max_fd, clients, &next_client_id);
 
         } else if (i == STDIN_FILENO) {
 
