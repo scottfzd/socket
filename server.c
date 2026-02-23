@@ -12,7 +12,7 @@
 typedef struct {
   int id;
   int fd;
-  // IP
+  char ip[INET_ADDRSTRLEN];
   // buffer
   // state
 } client_t;
@@ -95,12 +95,15 @@ int main() {
           client_t client;
           client.id = next_client_id;
           client.fd = client_fd;
+          inet_ntop(AF_INET, &client_addr.sin_addr, client.ip, INET_ADDRSTRLEN);
+
 
           clients[client_fd] = client;
 
           next_client_id ++;
 
           printf("%i\n", client.fd);
+          printf("%s\n", client.ip);
 
         } else if (i == STDIN_FILENO) {
 
@@ -152,7 +155,8 @@ int main() {
           ssize_t n = read(i, buffer, sizeof(buffer) - 1);
           if (n > 0) {
               buffer[n] = '\0';
-              printf("Received from client: %s", buffer);
+              char *client_ip = clients[i].ip;
+              printf("Received from client %s: %s", client_ip, buffer);
           } else if (n == 0) {
               // EOF
               FD_CLR(i, &all_fds);
