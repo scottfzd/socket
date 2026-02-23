@@ -17,7 +17,7 @@ typedef struct {
   // state
 } client_t;
 
-void handle_incoming_connection(int server_fd, fd_set *all_fds, int *max_fd, client_t* clients, int *next_client_id) {
+void handle_incoming_connection(int server_fd, fd_set *all_fds, int *max_fd, client_t *clients, int *next_client_id) {
 
   // Accept client connection
   struct sockaddr_in client_addr;
@@ -45,6 +45,29 @@ void handle_incoming_connection(int server_fd, fd_set *all_fds, int *max_fd, cli
 
 }
 
+void handle_client_data(int client_fd, client_t *clients, fd_set *all_fds) {
+
+  char buffer[1024];
+
+  ssize_t n = read(client_fd, buffer, sizeof(buffer) - 1);
+  if (n > 0) {
+      buffer[n] = '\0';
+      char *client_ip = clients[client_fd].ip;
+      printf("Received from client %s: %s", client_ip, buffer);
+  } else if (n == 0) {
+      // EOF
+      FD_CLR(client_fd, *all_fds);
+      memset(&clients[client_fd], 0, sizeof(client_t));
+      close(client_fd);
+  } else {
+    // error
+    perror("read");
+    FD_CLR(client_fd, *all_fds);
+    memset(&clients[client_fd], 0, sizeof(client_t));
+    close(client_fd);
+  }
+
+}
 
 int main() {
 
@@ -109,7 +132,7 @@ int main() {
         // If fd is server_fd, handle new connection
         if (i == server_fd) {
 
-          
+
           handle_incoming_connection(server_fd, &all_fds, &max_fd, clients, &next_client_id);
 
         } else if (i == STDIN_FILENO) {
@@ -156,26 +179,9 @@ int main() {
 
         } else {
 
-          // else (client fd) handle data
-          char buffer[1024];
 
-          ssize_t n = read(i, buffer, sizeof(buffer) - 1);
-          if (n > 0) {
-              buffer[n] = '\0';
-              char *client_ip = clients[i].ip;
-              printf("Received from client %s: %s", client_ip, buffer);
-          } else if (n == 0) {
-              // EOF
-              FD_CLR(i, &all_fds);
-              memset(&clients[i], 0, sizeof(client_t));
-              close(i);
-          } else {
-            // error
-            perror("read");
-            FD_CLR(i, &all_fds);
-            memset(&clients[i], 0, sizeof(client_t));
-            close(i);
-          }
+          handle_client_data(i, clients, &all_fds);
+          
         }
 
       }
