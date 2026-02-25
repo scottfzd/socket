@@ -24,6 +24,12 @@ void handle_incoming_connection(int server_fd, fd_set *all_fds, int *max_fd, cli
   socklen_t client_len = sizeof(client_addr);
 
   int client_fd = accept(server_fd, (struct  sockaddr *)&client_addr, &client_len);
+
+  if (client_fd < 0) {
+    perror("accept");
+    return;
+  }
+
   FD_SET(client_fd, all_fds);
 
   if (client_fd > *max_fd) { 
