@@ -154,12 +154,17 @@ int main() {
 
             int id = atoi(id_str);
 
-            int client_fd;
+            int client_fd = -1;
             for (int j = 0; j < sizeof(clients)/sizeof(client_t); j++) {
               if (clients[j].fd != 0 && clients[j].id == id) {
                 client_fd = clients[j].fd;
                 break;
               }
+            }
+
+            if (client_fd == -1) {
+              printf("Client not found\n");
+              continue;
             }
 
             if (strcmp(cmd, "send") == 0) {
@@ -172,6 +177,9 @@ int main() {
 
                 if (n_bytes > 0) {
                   sent += n_bytes;
+                } else {
+                  perror("send");
+                  break;
                 }
 
               }
