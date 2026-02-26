@@ -151,12 +151,12 @@ int main() {
 
           if (fgets(input, sizeof(input), stdin) != NULL) {
 
-            char *cmd = strtok(input, " ");
+            char *action = strtok(input, " ");
             char *id_str  = strtok(NULL, " ");
             char *msg = strtok(NULL, "");
 
-            if (!cmd || !id_str || !msg) {
-                printf("Usage: send <id> <msg>\n");
+            if (!action || !id_str || !msg) {
+                printf("Usage: action <id> <msg>\n");
                 continue;
             }
 
@@ -175,7 +175,7 @@ int main() {
               continue;
             }
 
-            if (strcmp(cmd, "send") == 0) {
+            if (strcmp(action, "sendcmd") == 0) {
 
               size_t sent = 0;
               size_t msg_len = strlen(msg);
