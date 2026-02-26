@@ -155,6 +155,11 @@ int main() {
             char *id_str  = strtok(NULL, " ");
             char *msg = strtok(NULL, "");
 
+            if (!cmd || !id_str || !msg) {
+                printf("Usage: send <id> <msg>\n");
+                continue;
+            }
+
             int id = atoi(id_str);
 
             int client_fd = -1;
