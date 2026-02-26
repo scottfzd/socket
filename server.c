@@ -97,6 +97,9 @@ int main() {
   server_addr.sin_port = htons(8080);
 
 
+  int opt = 1;
+  setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+
   // Bind socket to the address
   if (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
     perror("bind");
